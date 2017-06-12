@@ -62,14 +62,14 @@ static const __m128i SHIFT = _mm_set_epi32(0,0,0,4);
      * @param nbBlocks number of blocks of 128 bits
 */
 template<int Tr = -1, int nbBlocks = 4>
-struct CV_EXPORTS HammingSeg
+struct HammingSeg
 {
     // 512 hamming distance segmented in 128+384 bits
     // SSSE3
     // adapted from http://wm.ite.pl/articles/sse-popcount.html
     // and BRISK: Binary Robust Invariant Scalable Keypoints : http://www.asl.ethz.ch/people/lestefan/personal/BRISK
     // http://en.wikipedia.org/wiki/Hamming_weight
-    static CV_INLINE uint32_t XORedPopcnt_128_384( const __m128i* string1, const __m128i* string2 )
+    static uint32_t XORedPopcnt_128_384( const __m128i* string1, const __m128i* string2 )
     {
         register __m128i xmm0;
         register __m128i xmm1;
@@ -172,7 +172,7 @@ struct CV_EXPORTS HammingSeg
         return _mm_cvtsi128_si32(xmm0); // Moves the least significant 32 bits of a to a 32-bit integer.
     }
 
-    enum {normType =  NORM_HAMMING};
+    enum {normType =  cv::NORM_HAMMING};
     typedef unsigned char ValueType;
     //! important that this is signed as weird behavior happens
     // in BruteForce if not
@@ -183,6 +183,6 @@ struct CV_EXPORTS HammingSeg
         return XORedPopcnt_128_384((const __m128i*)a, (const __m128i*)b);
     }
 };
-} // END NAMESPACE CV
+} // END NAMESPACE FREAK
 
 #endif // HAMMINGSEG_H_INCLUDED
