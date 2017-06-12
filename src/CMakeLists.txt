@@ -18,7 +18,7 @@ set( freak_HDRS
     hammingseg.h
 )
 
-add_library( freak SHARED ${freak_SRCS} ${freak_HDRS} )
+add_library( freak STATIC ${freak_SRCS} ${freak_HDRS} )
 set_target_properties( freak PROPERTIES
     VERSION ${freak_VERSION}
     SOVERSION ${freak_SOVERSION}

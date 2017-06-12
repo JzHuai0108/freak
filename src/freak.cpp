@@ -371,6 +371,10 @@ void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoi
         std::bitset<CV_FREAK_NB_PAIRS>* ptr = (std::bitset<CV_FREAK_NB_PAIRS>*) (descriptors.data+(keypoints.size()-1)*descriptors.step[0]);
 #endif
         for( size_t k = keypoints.size(); k--; ) {
+
+            cv::KeyPoint& kpLarry = keypoints[k];
+            if(kpLarry.angle == -1){
+
             // estimate orientation (gradient)
             if( !orientationNormalized ) {
                 thetaIdx = 0; // assign 0° to all keypoints
@@ -398,6 +402,23 @@ void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoi
                 if( thetaIdx >= CV_FREAK_NB_ORIENTATION )
                     thetaIdx -= CV_FREAK_NB_ORIENTATION;
             }
+
+            }else
+            {
+                if( !orientationNormalized ) {
+                    thetaIdx = 0; // assign 0° to all keypoints
+                    //keypoints[k].angle = 0.0;
+                }
+                else {
+                    thetaIdx = int(CV_FREAK_NB_ORIENTATION*keypoints[k].angle*(1/360.0)+0.5);
+                    if( thetaIdx < 0 )
+                        thetaIdx += CV_FREAK_NB_ORIENTATION;
+
+                    if( thetaIdx >= CV_FREAK_NB_ORIENTATION )
+                        thetaIdx -= CV_FREAK_NB_ORIENTATION;
+                }
+            }
+
             // extract descriptor at the computed orientation
             for( int i = CV_FREAK_NB_POINTS; i--; ) {
                 pointsValue[i] = meanIntensity(image, imgIntegral, keypoints[k].pt.x,keypoints[k].pt.y, kpScaleIdx[k], thetaIdx, i);
@@ -442,6 +463,10 @@ void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoi
         std::bitset<1024>* ptr = (std::bitset<1024>*) (descriptors.data+(keypoints.size()-1)*descriptors.step[0]);
 
         for( size_t k = keypoints.size(); k--; ) {
+
+            cv::KeyPoint& kpLarry = keypoints[k];
+            if(kpLarry.angle == -1){
+
             //estimate orientation (gradient)
             if( !orientationNormalized ) {
                 thetaIdx = 0;//assign 0° to all keypoints
@@ -470,6 +495,24 @@ void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoi
                 if( thetaIdx >= CV_FREAK_NB_ORIENTATION )
                     thetaIdx -= CV_FREAK_NB_ORIENTATION;
             }
+
+            }else
+            {
+                if( !orientationNormalized ) {
+                    thetaIdx = 0;//assign 0° to all keypoints
+                    //keypoints[k].angle = 0.0;
+                }else
+                {
+                    thetaIdx = int(CV_FREAK_NB_ORIENTATION*keypoints[k].angle*(1/360.0)+0.5);
+
+                    if( thetaIdx < 0 )
+                        thetaIdx += CV_FREAK_NB_ORIENTATION;
+
+                    if( thetaIdx >= CV_FREAK_NB_ORIENTATION )
+                        thetaIdx -= CV_FREAK_NB_ORIENTATION;
+                }
+            }
+
             // get the points intensity value in the rotated pattern
             for( int i = CV_FREAK_NB_POINTS; i--; ) {
                 pointsValue[i] = meanIntensity(image, imgIntegral, keypoints[k].pt.x,

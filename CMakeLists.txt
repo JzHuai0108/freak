@@ -17,7 +17,7 @@ set( freak_SOVERSION ${freak_LIB_MAJOR_VERSION} )
 # so we hack it by hard coding the opencv path as /usr/local
 # find_package( OpenCV COMPONENTS core highgui imgproc features2d REQUIRED)
 set(OpenCV_INCLUDE_DIRS /usr/local/include)
-set(OpenCV_LIBS opencv_core opencv_highgui opencv_imgproc opencv_features2d opencv_flann opencv_nonfree)
+set(OpenCV_LIBS opencv_core opencv_highgui opencv_imgproc opencv_features2d opencv_flann)
 include_directories(BEFORE ${OpenCV_INCLUDE_DIRS})
 message("opencv include dirs are " ${OpenCV_INCLUDE_DIRS})
 message("opencv libs are " ${OpenCV_LIBS})
