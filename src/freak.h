@@ -36,9 +36,9 @@
 #include <opencv2/core/core.hpp>
 #include <string>
 
-namespace cv {
+namespace freak {
 
-class CV_EXPORTS FREAK : public cv::DescriptorExtractor
+class FREAK : public cv::DescriptorExtractor
 {
 public:
     /** Constructor
@@ -52,14 +52,14 @@ public:
            , bool scaleNormalized = true
            , float patternScale = 22.0f
            , int nbOctave = 4
-           , const vector<int>& selectedPairs = vector<int>()
+           , const std::vector<int>& selectedPairs = std::vector<int>()
          );
 
     virtual ~FREAK();
 
     // Not used TODO
-    virtual void read( const FileNode& );
-    virtual void write( FileStorage& ) const;
+    virtual void read( const cv::FileNode& );
+    virtual void write( cv::FileStorage& ) const;
 
     /** returns the descriptor length in bytes */
     virtual int descriptorSize() const;
@@ -74,13 +74,13 @@ public:
          * @param verbose print construction information
          * @return list of best pair indexes
     */
-    vector<int> selectPairs( const vector<Mat>& images, vector<vector<KeyPoint> >& keypoints,
+    std::vector<int> selectPairs( const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint> >& keypoints,
                       const double corrThresh = 0.7, bool verbose = true );
 
 //    AlgorithmInfo* info() const;
 
 protected:
-    virtual void computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
+    virtual void computeImpl( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const;
 
 protected:
     struct FREAKImpl* impl;
@@ -90,6 +90,6 @@ private:
     const FREAK& operator=( const FREAK& ); // nor assignement operator
 };
 
-} // END NAMESPACE CV
+} // END NAMESPACE FREAK
 
 #endif // FREAK_H_INCLUDED

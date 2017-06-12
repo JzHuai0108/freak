@@ -53,7 +53,7 @@
     #define CV_PI 3.141592653589793
 #endif
 
-namespace cv {
+namespace freak {
 
 // binary: 10000000 => char: 128 or hex: 0x80
 static const __m128i binMask = _mm_set_epi8(0x80, 0x80, 0x80,
@@ -154,7 +154,7 @@ struct FREAKImpl {
          );
 
     ~FREAKImpl();
-    void compute( const Mat& image, std::vector<KeyPoint>& keypoints, Mat& descriptors ) const;
+    void compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const;
 
     /** create the pattern lookup table for all orientation and scale
          * @param filename (optional) vector containing the selected pairs
@@ -164,7 +164,7 @@ struct FREAKImpl {
     /** draw the description pattern, debug only uncomment if needed */
    // void drawPattern();
 
-    std::vector<int> selectPairs( const std::vector<Mat>& images, std::vector<std::vector<KeyPoint> >& keypoints,
+    std::vector<int> selectPairs( const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint> >& keypoints,
                         const double corrTresh, bool verbose );
 
     /** compute the intensity of a pattern point (simple mean approximation on a square box)
@@ -176,7 +176,7 @@ struct FREAKImpl {
          * @param rot orientation index in look-up table
          * @param point point index in look-up table
     */
-    uchar meanIntensity( const Mat& image, const Mat& integral, const float kp_x, const float kp_y,
+    uchar meanIntensity( const cv::Mat& image, const cv::Mat& integral, const float kp_x, const float kp_y,
                          const unsigned int scale, const unsigned int rot, const unsigned int point ) const;
 
     bool orientationNormalized; //true if the orientation is normalized, false otherwise
@@ -305,7 +305,7 @@ void FREAKImpl::buildPattern( const std::vector<int>& selectedPairs )
     }
 }
 
-void FREAKImpl::compute( const Mat& image, std::vector<KeyPoint>& keypoints, Mat& descriptors ) const {
+void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const {
 
 #if CV_SSSE3
     register __m128i operand1;
@@ -314,7 +314,7 @@ void FREAKImpl::compute( const Mat& image, std::vector<KeyPoint>& keypoints, Mat
     register __m128i result128;
 #endif
 
-    Mat imgIntegral;
+    cv::Mat imgIntegral;
     integral(image, imgIntegral);
     std::vector<int> kpScaleIdx(keypoints.size()); // used to save pattern scale index corresponding to each keypoints
     const std::vector<int>::iterator ScaleIdxBegin = kpScaleIdx.begin(); // used in std::vector erase function
@@ -329,7 +329,7 @@ void FREAKImpl::compute( const Mat& image, std::vector<KeyPoint>& keypoints, Mat
     if( scaleNormalized ) {
         for( size_t k = keypoints.size(); k--; ) {
             //Is k non-zero? If so, decrement it and continue"
-            kpScaleIdx[k] = max( (int)(log(keypoints[k].size/CV_FREAK_SMALLEST_KP_SIZE)*sizeCst+0.5) ,0);
+            kpScaleIdx[k] = std::max( (int)(log(keypoints[k].size/CV_FREAK_SMALLEST_KP_SIZE)*sizeCst+0.5) ,0);
             if( kpScaleIdx[k] >= CV_FREAK_NB_SCALES )
                 kpScaleIdx[k] = CV_FREAK_NB_SCALES-1;
 
@@ -344,7 +344,7 @@ void FREAKImpl::compute( const Mat& image, std::vector<KeyPoint>& keypoints, Mat
         }
     }
     else {
-        const int scIdx = max( (int)(1.0986122886681*sizeCst+0.5) ,0);
+        const int scIdx = std::max( (int)(1.0986122886681*sizeCst+0.5) ,0);
         for( size_t k = keypoints.size(); k--; ) {
             kpScaleIdx[k] = scIdx; // equivalent to the formule when the scale is normalized with a constant size of keypoints[k].size=3*SMALLEST_KP_SIZE
             if( kpScaleIdx[k] >= CV_FREAK_NB_SCALES ) {
@@ -428,7 +428,7 @@ void FREAKImpl::compute( const Mat& image, std::vector<KeyPoint>& keypoints, Mat
                 (*ptr) = result128;
                 ++ptr;
             }
-            ptr -= (FREAK_NB_PAIRS/128)*2;
+            ptr -= (CV_FREAK_NB_PAIRS/128)*2;
 #else
             for( int m = CV_FREAK_NB_PAIRS; m--; ) {
                 ptr->set(m, pointsValue[descriptionPairs[m].i]>  pointsValue[descriptionPairs[m].j ] );
@@ -550,20 +550,20 @@ uchar FREAKImpl::meanIntensity( const cv::Mat& image, const cv::Mat& integral,
 }
 
 // pair selection algorithm from a set of training images and corresponding keypoints
-std::vector<int> FREAKImpl::selectPairs(const std::vector<Mat>& images
-                                        , std::vector<std::vector<KeyPoint> >& keypoints
+std::vector<int> FREAKImpl::selectPairs(const std::vector<cv::Mat>& images
+                                        , std::vector<std::vector<cv::KeyPoint> >& keypoints
                                         , const double corrTresh
                                         , bool verbose )
 {
     extAll = true;
     // compute descriptors with all pairs
-    Mat descriptors;
+    cv::Mat descriptors;
 
     if( verbose )
         std::cout << "Number of images: " << images.size() << std::endl;
 
     for( size_t i = 0;i < images.size(); ++i ) {
-        Mat descriptorsTmp;
+        cv::Mat descriptorsTmp;
         compute(images[i],keypoints[i],descriptorsTmp);
         descriptors.push_back(descriptorsTmp);
     }
@@ -572,7 +572,7 @@ std::vector<int> FREAKImpl::selectPairs(const std::vector<Mat>& images
         std::cout << "number of keypoints: " << descriptors.rows << std::endl;
 
     //descriptor in floating point format (each bit is a float)
-    Mat descriptorsFloat = Mat::zeros(descriptors.rows, 903, CV_32F);
+    cv::Mat descriptorsFloat = cv::Mat::zeros(descriptors.rows, 903, CV_32F);
 
     std::bitset<1024>* ptr = (std::bitset<1024>*) (descriptors.data+(descriptors.rows-1)*descriptors.step[0]);
     for( size_t m = descriptors.rows; m--; ) {
@@ -640,7 +640,7 @@ std::vector<int> FREAKImpl::selectPairs(const std::vector<Mat>& images
 /*
 void FREAKImpl::drawPattern()
 { // create an image showing the brisk pattern
-    Mat pattern = Mat::zeros(1000, 1000, CV_8UC3) + Scalar(255,255,255);
+    cv::Mat pattern = cv::Mat::zeros(1000, 1000, CV_8UC3) + Scalar(255,255,255);
     int sFac = 500 / patternScale;
     for( int n = 0; n < kNB_POINTS; ++n ) {
         PatternPoint& pt = patternLookup[n];
@@ -670,7 +670,7 @@ FREAK::~FREAK()
     delete impl;
 }
 
-void FREAK::computeImpl( const Mat& image, std::vector<KeyPoint>& keypoints, Mat& descriptors ) const
+void FREAK::computeImpl( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const
 {
     if( image.empty() )
         return;
@@ -679,7 +679,7 @@ void FREAK::computeImpl( const Mat& image, std::vector<KeyPoint>& keypoints, Mat
     impl->compute(image, keypoints, descriptors);
 }
 
-std::vector<int> FREAK::selectPairs( const std::vector<Mat>& images, std::vector<std::vector<KeyPoint> >& keypoints,
+std::vector<int> FREAK::selectPairs( const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint> >& keypoints,
                                      const double corrTresh, bool verbose )
 {
     return impl->selectPairs(images, keypoints, corrTresh, verbose);
@@ -694,10 +694,10 @@ int FREAK::descriptorType() const {
 }
 
 // TODO
-void FREAK::read( const FileNode& ) {}
-void FREAK::write( FileStorage& ) const {}
+void FREAK::read( const cv::FileNode& ) {}
+void FREAK::write( cv::FileStorage& ) const {}
 
-} // END NAMESPACE CV
+} // END NAMESPACE FREAK
 
 
 

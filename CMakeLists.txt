@@ -12,7 +12,15 @@ set( freak_SOVERSION ${freak_LIB_MAJOR_VERSION} )
 
 #### Required
 #    FIND_PACKAGE(OpenCV REQUIRED core highgui)
-find_package(OpenCV REQUIRED)
+# find_package(OpenCV REQUIRED)
+# if you are using kinetic, opencv3.1 is likely included there, and find_package opencv will invariably identify opencv there
+# so we hack it by hard coding the opencv path as /usr/local
+# find_package( OpenCV COMPONENTS core highgui imgproc features2d REQUIRED)
+set(OpenCV_INCLUDE_DIRS /usr/local/include)
+set(OpenCV_LIBS opencv_core opencv_highgui opencv_imgproc opencv_features2d opencv_flann opencv_nonfree)
+include_directories(BEFORE ${OpenCV_INCLUDE_DIRS})
+message("opencv include dirs are " ${OpenCV_INCLUDE_DIRS})
+message("opencv libs are " ${OpenCV_LIBS})
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )

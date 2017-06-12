@@ -46,7 +46,7 @@
 #include "freak.h"
 #include "hammingseg.h"
 
-using namespace cv;
+//using namespace cv;
 
 void help( char** argv )
 {
@@ -67,68 +67,68 @@ int main( int argc, char** argv ) {
     }
 
     // Load images
-    Mat imgA = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE );
+    cv::Mat imgA = cv::imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE );
     if( !imgA.data ) {
         std::cout<< " --(!) Error reading image " << argv[1] << std::endl;
         return -1;
     }
 
-    Mat imgB = imread(argv[2], CV_LOAD_IMAGE_GRAYSCALE );
+    cv::Mat imgB = cv::imread(argv[2], CV_LOAD_IMAGE_GRAYSCALE );
     if( !imgA.data ) {
         std::cout << " --(!) Error reading image " << argv[2] << std::endl;
         return -1;
     }
 
-    std::vector<KeyPoint> keypointsA, keypointsB;
-    Mat descriptorsA, descriptorsB;
-    std::vector<DMatch> matches;
+    std::vector<cv::KeyPoint> keypointsA, keypointsB;
+    cv::Mat descriptorsA, descriptorsB;
+    std::vector<cv::DMatch> matches;
 
     // DETECTION
     // Any openCV detector such as
-    SurfFeatureDetector detector(2000,4);
+    cv::SurfFeatureDetector detector(2000,4);
 
     // DESCRIPTOR
     // Our proposed FREAK descriptor
     // (roation invariance, scale invariance, pattern radius corresponding to SMALLEST_KP_SIZE,
     // number of octaves, optional vector containing the selected pairs)
     // FREAK extractor(true, true, 22, 4, std::vector<int>());
-    FREAK extractor;
+    freak::FREAK extractor;
 
     // MATCHER
     // The standard Hamming distance can be used such as
     // BruteForceMatcher<Hamming> matcher;
     // or the proposed cascade of hamming distance using SSSE3
 #if CV_SSSE3
-    BruteForceMatcher< HammingSeg<30,4> > matcher;
+    cv::BruteForceMatcher< freak::HammingSeg<30,4> > matcher;
 #else
-    BruteForceMatcher<Hamming> matcher;
+    cv::BruteForceMatcher<cv::Hamming> matcher;
 #endif
 
     // detect
-    double t = (double)getTickCount();
+    double t = (double)cv::getTickCount();
     detector.detect( imgA, keypointsA );
     detector.detect( imgB, keypointsB );
-    t = ((double)getTickCount() - t)/getTickFrequency();
+    t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
     std::cout << "detection time [s]: " << t/1.0 << std::endl;
 
     // extract
-    t = (double)getTickCount();
+    t = (double)cv::getTickCount();
     extractor.compute( imgA, keypointsA, descriptorsA );
     extractor.compute( imgB, keypointsB, descriptorsB );
-    t = ((double)getTickCount() - t)/getTickFrequency();
+    t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
     std::cout << "extraction time [s]: " << t << std::endl;
 
     // match
-    t = (double)getTickCount();
+    t = (double)cv::getTickCount();
     matcher.match(descriptorsA, descriptorsB, matches);
-    t = ((double)getTickCount() - t)/getTickFrequency();
+    t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
     std::cout << "matching time [s]: " << t << std::endl;
 
     // Draw matches
-    Mat imgMatch;
-    drawMatches(imgA, keypointsA, imgB, keypointsB, matches, imgMatch);
+    cv::Mat imgMatch;
+    cv::drawMatches(imgA, keypointsA, imgB, keypointsB, matches, imgMatch);
 
-    namedWindow("matches", CV_WINDOW_KEEPRATIO);
-    imshow("matches", imgMatch);
-    waitKey(0);
+    cv::namedWindow("matches", CV_WINDOW_KEEPRATIO);
+    cv::imshow("matches", imgMatch);
+    cv::waitKey(0);
 }
