@@ -11,13 +11,8 @@ set( freak_VERSION ${freak_LIB_MAJOR_VERSION}.${freak_LIB_MINOR_VERSION}.${freak
 set( freak_SOVERSION ${freak_LIB_MAJOR_VERSION} )
 
 #### Required
-#    FIND_PACKAGE(OpenCV REQUIRED core highgui)
-# find_package(OpenCV REQUIRED)
-# if you are using kinetic, opencv3.1 is likely included there, and find_package opencv will invariably identify opencv there
-# so we hack it by hard coding the opencv path as /usr/local
-# find_package( OpenCV COMPONENTS core highgui imgproc features2d REQUIRED)
-set(OpenCV_INCLUDE_DIRS /usr/local/include)
-set(OpenCV_LIBS opencv_core opencv_highgui opencv_imgproc opencv_features2d opencv_flann)
+# Please provide cmake argument -DOpenCV_DIR=/path/to/share/OpenCV if you want to use a particular OpenCV
+FIND_PACKAGE(OpenCV REQUIRED core highgui)
 include_directories(BEFORE ${OpenCV_INCLUDE_DIRS})
 message("opencv include dirs are " ${OpenCV_INCLUDE_DIRS})
 message("opencv libs are " ${OpenCV_LIBS})
@@ -32,7 +27,7 @@ set( LIB_INSTALL_DIR ${EXEC_INSTALL_PREFIX}/lib${LIB_SUFFIX} CACHE PATH  "Instal
 set( INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include CACHE PATH "Installation prefix for C header files" FORCE )
 
 option( BUILD_SHARED_LIBS "Build shared libraries" ON )
-option( BUILD_DEMO "Build demo" ON )
+option( BUILD_DEMO "Build demo" OFF ) #cause errors in opencv 3.1.0
 option( USE_SSE "Use SSE3" ON )
 
 if( USE_SSE )
