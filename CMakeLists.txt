@@ -12,7 +12,7 @@ set( freak_SOVERSION ${freak_LIB_MAJOR_VERSION} )
 
 #### Required
 # Please provide cmake argument -DOpenCV_DIR=/path/to/share/OpenCV if you want to use a particular OpenCV
-FIND_PACKAGE(OpenCV REQUIRED core highgui)
+FIND_PACKAGE(OpenCV REQUIRED core highgui features2d)
 include_directories(BEFORE ${OpenCV_INCLUDE_DIRS})
 message("opencv include dirs are " ${OpenCV_INCLUDE_DIRS})
 message("opencv libs are " ${OpenCV_LIBS})
@@ -27,7 +27,7 @@ set( LIB_INSTALL_DIR ${EXEC_INSTALL_PREFIX}/lib${LIB_SUFFIX} CACHE PATH  "Instal
 set( INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include CACHE PATH "Installation prefix for C header files" FORCE )
 
 option( BUILD_SHARED_LIBS "Build shared libraries" ON )
-option( BUILD_DEMO "Build demo" OFF ) #cause errors in opencv 3.1.0
+option( BUILD_DEMO "Build demo" ON )
 option( USE_SSE "Use SSE3" ON )
 
 if( USE_SSE )
@@ -56,7 +56,12 @@ set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules )
 #configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h )
 
 # Process subdir
-add_subdirectory( src )
+MESSAGE("OpenCV_VERSION " ${OpenCV_VERSION})
+if(NOT OpenCV_VERSION VERSION_LESS "3.0")
+  add_subdirectory( src3)
+ELSE()
+  add_subdirectory( src)
+ENDIF()
 
 if( BUILD_DEMO )
     add_subdirectory( demo )

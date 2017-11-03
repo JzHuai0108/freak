@@ -40,13 +40,16 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#if CV_MAJOR_VERSION==2
 #include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/legacy/legacy.hpp>
-
-#include "freak.h"
-#include "hammingseg.h"
-
-//using namespace cv;
+#include "src/hammingseg.h"
+#include "src/freak.h"
+#elif CV_MAJOR_VERSION==3
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include "src3/freak.h"
+#endif
 
 void help( char** argv )
 {
@@ -84,9 +87,9 @@ int main( int argc, char** argv ) {
     std::vector<cv::DMatch> matches;
 
     // DETECTION
+#if CV_MAJOR_VERSION==2
     // Any openCV detector such as
     cv::SurfFeatureDetector detector(2000,4);
-
     // DESCRIPTOR
     // Our proposed FREAK descriptor
     // (roation invariance, scale invariance, pattern radius corresponding to SMALLEST_KP_SIZE,
@@ -94,7 +97,14 @@ int main( int argc, char** argv ) {
     // FREAK extractor(true, true, 22, 4, std::vector<int>());
     freak::FREAK extractor;
 
+#elif CV_MAJOR_VERSION==3
+    cv::Ptr<cv::Feature2D> detector;
+    detector = cv::BRISK::create();
+    cv::Ptr<cv::Feature2D>  extractor = freak::FREAK::create();
+#endif
+
     // MATCHER
+#if CV_MAJOR_VERSION==2
     // The standard Hamming distance can be used such as
     // BruteForceMatcher<Hamming> matcher;
     // or the proposed cascade of hamming distance using SSSE3
@@ -103,18 +113,31 @@ int main( int argc, char** argv ) {
 #else
     cv::BruteForceMatcher<cv::Hamming> matcher;
 #endif
+#elif CV_MAJOR_VERSION==3
+    cv::BFMatcher matcher(cv::NORM_HAMMING, true);
+#endif
 
     // detect
     double t = (double)cv::getTickCount();
+#if CV_MAJOR_VERSION==2
     detector.detect( imgA, keypointsA );
     detector.detect( imgB, keypointsB );
+#elif CV_MAJOR_VERSION==3
+    detector->detect( imgA, keypointsA );
+    detector->detect( imgB, keypointsB );
+#endif
     t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
     std::cout << "detection time [s]: " << t/1.0 << std::endl;
 
     // extract
     t = (double)cv::getTickCount();
+#if CV_MAJOR_VERSION==2
     extractor.compute( imgA, keypointsA, descriptorsA );
     extractor.compute( imgB, keypointsB, descriptorsB );
+#elif CV_MAJOR_VERSION==3
+    extractor->compute( imgA, keypointsA, descriptorsA );
+    extractor->compute( imgB, keypointsB, descriptorsB );
+#endif
     t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
     std::cout << "extraction time [s]: " << t << std::endl;
 
