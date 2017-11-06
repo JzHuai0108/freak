@@ -31,7 +31,7 @@ public:
     @param nOctaves Number of octaves covered by the detected keypoints.
     @param selectedPairs (Optional) user defined selected pairs indexes,
      */
-    static cv::Ptr<FREAK> create(bool orientationNormalized = true,
+    static cv::Ptr<FREAK> create(bool doOrientation, bool orientationNormalized = true,
                              bool scaleNormalized = true,
                              float patternScale = 22.0f,
                              int nOctaves = 4,

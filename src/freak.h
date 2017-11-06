@@ -48,7 +48,7 @@ public:
          * @param nbOctave number of octaves covered by the detected keypoints
          * @param selectedPairs (optional) user defined selected pairs
     */
-    explicit FREAK( bool orientationNormalized = true
+    explicit FREAK(bool doOrientation, bool orientationNormalized = true
            , bool scaleNormalized = true
            , float patternScale = 22.0f
            , int nbOctave = 4
@@ -80,11 +80,11 @@ public:
 //    AlgorithmInfo* info() const;
 
 protected:
-    virtual void computeImpl( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const;
+    virtual void computeImpl( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors) const;
 
 protected:
     struct FREAKImpl* impl;
-
+    bool doOrientation_; // do we compute orientation in computing descriptors
 private:
     FREAK( const FREAK& rhs ); // do not allow copy constructor
     const FREAK& operator=( const FREAK& ); // nor assignement operator

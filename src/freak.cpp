@@ -154,7 +154,7 @@ struct FREAKImpl {
          );
 
     ~FREAKImpl();
-    void compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const;
+    void compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors, bool doOrientation) const;
 
     /** create the pattern lookup table for all orientation and scale
          * @param filename (optional) vector containing the selected pairs
@@ -305,7 +305,7 @@ void FREAKImpl::buildPattern( const std::vector<int>& selectedPairs )
     }
 }
 
-void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const {
+void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors, bool doOrientation ) const {
 
 #if CV_SSSE3
     register __m128i operand1;
@@ -372,8 +372,8 @@ void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoi
 #endif
         for( size_t k = keypoints.size(); k--; ) {
 
-            cv::KeyPoint& kpLarry = keypoints[k];
-            if(kpLarry.angle == -1){
+
+            if(doOrientation){
 
             // estimate orientation (gradient)
             if( !orientationNormalized ) {
@@ -464,9 +464,7 @@ void FREAKImpl::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoi
 
         for( size_t k = keypoints.size(); k--; ) {
 
-            cv::KeyPoint& kpLarry = keypoints[k];
-            if(kpLarry.angle == -1){
-
+            if(doOrientation){
             //estimate orientation (gradient)
             if( !orientationNormalized ) {
                 thetaIdx = 0;//assign 0° to all keypoints
@@ -607,7 +605,7 @@ std::vector<int> FREAKImpl::selectPairs(const std::vector<cv::Mat>& images
 
     for( size_t i = 0;i < images.size(); ++i ) {
         cv::Mat descriptorsTmp;
-        compute(images[i],keypoints[i],descriptorsTmp);
+        compute(images[i],keypoints[i],descriptorsTmp, true);
         descriptors.push_back(descriptorsTmp);
     }
 
@@ -702,9 +700,9 @@ void FREAKImpl::drawPattern()
 
 // -------------------------------------------------
 /* FREAK interface implementation */
-FREAK::FREAK( bool orientationNormalized, bool scaleNormalized
+FREAK::FREAK( bool doOrientation, bool orientationNormalized, bool scaleNormalized
             , float patternScale, int nbOctave, const std::vector<int>& selectedPairs )
-    : impl(new FREAKImpl(orientationNormalized, scaleNormalized, patternScale, nbOctave, selectedPairs))
+    : impl(new FREAKImpl(orientationNormalized, scaleNormalized, patternScale, nbOctave, selectedPairs)), doOrientation_(doOrientation)
 {
 }
 
@@ -713,13 +711,13 @@ FREAK::~FREAK()
     delete impl;
 }
 
-void FREAK::computeImpl( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const
+void FREAK::computeImpl( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors) const
 {
     if( image.empty() )
         return;
     if( keypoints.empty() )
         return;
-    impl->compute(image, keypoints, descriptors);
+    impl->compute(image, keypoints, descriptors, doOrientation_);
 }
 
 std::vector<int> FREAK::selectPairs( const std::vector<cv::Mat>& images, std::vector<std::vector<cv::KeyPoint> >& keypoints,

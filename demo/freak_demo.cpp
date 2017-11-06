@@ -86,21 +86,26 @@ int main( int argc, char** argv ) {
     cv::Mat descriptorsA, descriptorsB;
     std::vector<cv::DMatch> matches;
 
+    keypointsA.clear();
+    keypointsB.clear();
+
     // DETECTION
 #if CV_MAJOR_VERSION==2
     // Any openCV detector such as
-    cv::SurfFeatureDetector detector(2000,4);
+//    cv::SurfFeatureDetector detector(2000,4);
+    cv::BRISK detector;
+
     // DESCRIPTOR
     // Our proposed FREAK descriptor
     // (roation invariance, scale invariance, pattern radius corresponding to SMALLEST_KP_SIZE,
     // number of octaves, optional vector containing the selected pairs)
     // FREAK extractor(true, true, 22, 4, std::vector<int>());
-    freak::FREAK extractor;
+    freak::FREAK extractor(false);
 
 #elif CV_MAJOR_VERSION==3
     cv::Ptr<cv::Feature2D> detector;
     detector = cv::BRISK::create();
-    cv::Ptr<cv::Feature2D>  extractor = freak::FREAK::create();
+    cv::Ptr<cv::Feature2D>  extractor = freak::FREAK::create(false);
 #endif
 
     // MATCHER
@@ -126,6 +131,17 @@ int main( int argc, char** argv ) {
     detector->detect( imgA, keypointsA );
     detector->detect( imgB, keypointsB );
 #endif
+    for(size_t jack = 0; jack < keypointsA.size(); ++ jack)
+    {
+        std::cout <<jack << "kp angle "<< keypointsA[jack].angle<<std::endl;
+    }
+    cv::Mat imgABrisk;
+    cv::drawKeypoints(imgA, keypointsA, imgABrisk, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+    cv::namedWindow("brisk keys", CV_WINDOW_KEEPRATIO);
+    cv::imshow("brisk keys", imgABrisk);
+
+
     t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
     std::cout << "detection time [s]: " << t/1.0 << std::endl;
 
@@ -138,6 +154,19 @@ int main( int argc, char** argv ) {
     extractor->compute( imgA, keypointsA, descriptorsA );
     extractor->compute( imgB, keypointsB, descriptorsB );
 #endif
+    std::cout <<"After descriptor extraction "<<std::endl;
+    for(size_t jack = 0; jack < keypointsA.size(); ++ jack)
+    {
+        std::cout <<jack << "kp angle "<< keypointsA[jack].angle<<std::endl;
+    }
+
+    cv::Mat imgAFreak;
+    cv::drawKeypoints(imgA, keypointsA, imgAFreak, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+    cv::namedWindow("freak keys", CV_WINDOW_KEEPRATIO);
+    cv::imshow("freak keys", imgAFreak);
+
+
     t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
     std::cout << "extraction time [s]: " << t << std::endl;
 
@@ -149,7 +178,9 @@ int main( int argc, char** argv ) {
 
     // Draw matches
     cv::Mat imgMatch;
-    cv::drawMatches(imgA, keypointsA, imgB, keypointsB, matches, imgMatch);
+    cv::drawMatches(imgA, keypointsA, imgB, keypointsB, matches, imgMatch,
+      cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char> (), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
 
     cv::namedWindow("matches", CV_WINDOW_KEEPRATIO);
     cv::imshow("matches", imgMatch);

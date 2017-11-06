@@ -60,7 +60,7 @@ public:
      * @param nbOctave number of octaves covered by the detected keypoints
      * @param selectedPairs (optional) user defined selected pairs
      */
-    explicit FREAK_Impl( bool orientationNormalized = true,
+    explicit FREAK_Impl(bool doOrientation, bool orientationNormalized = true,
                    bool scaleNormalized = true,
                    float patternScale = 22.0f,
                    int nOctaves = 4,
@@ -102,6 +102,7 @@ protected:
     template <typename srcMatType>
     void extractDescriptor(srcMatType *pointsValue, void ** ptr);
 
+    bool doOrientation; // compute orientation or use the value provided in keypoints
     bool orientationNormalized; //true if the orientation is normalized, false otherwise
     bool scaleNormalized; //true if the scale is normalized, false otherwise
     double patternScale; //scaling of the pattern
@@ -516,6 +517,8 @@ void FREAK_Impl::computeDescriptors( cv::InputArray _image, std::vector<cv::KeyP
         void *ptr = descriptors.data+(keypoints.size()-1)*descriptors.step[0];
 
         for( size_t k = keypoints.size(); k--; ) {
+
+            if(doOrientation){
             // estimate orientation (gradient)
             if( !orientationNormalized )
             {
@@ -553,6 +556,27 @@ void FREAK_Impl::computeDescriptors( cv::InputArray _image, std::vector<cv::KeyP
                 if( thetaIdx >= FREAK_NB_ORIENTATION )
                     thetaIdx -= FREAK_NB_ORIENTATION;
             }
+
+            }else
+            {
+                if( !orientationNormalized ) {
+                    thetaIdx = 0; // assign 0° to all keypoints
+                    //keypoints[k].angle = 0.0;
+                }
+                else {
+                    if(keypoints[k].angle < 0.f)
+                        thetaIdx = int(FREAK_NB_ORIENTATION*keypoints[k].angle*(1/360.0)-0.5);
+                    else
+                        thetaIdx = int(FREAK_NB_ORIENTATION*keypoints[k].angle*(1/360.0)+0.5);
+
+                    if( thetaIdx < 0 )
+                        thetaIdx += FREAK_NB_ORIENTATION;
+
+                    if( thetaIdx >= FREAK_NB_ORIENTATION )
+                        thetaIdx -= FREAK_NB_ORIENTATION;
+                }
+            }
+
             // extract descriptor at the computed orientation
             for( int i = FREAK_NB_POINTS; i--; ) {
                 pointsValue[i] = meanIntensity<srcMatType, iiMatType>(image, imgIntegral,
@@ -573,6 +597,7 @@ void FREAK_Impl::computeDescriptors( cv::InputArray _image, std::vector<cv::KeyP
 
         for( size_t k = keypoints.size(); k--; )
         {
+            if(doOrientation){
             //estimate orientation (gradient)
             if( !orientationNormalized )
             {
@@ -609,7 +634,28 @@ void FREAK_Impl::computeDescriptors( cv::InputArray _image, std::vector<cv::KeyP
 
                 if( thetaIdx >= FREAK_NB_ORIENTATION )
                     thetaIdx -= FREAK_NB_ORIENTATION;
+            }            
+
+            }else
+            {
+                if( !orientationNormalized ) {
+                    thetaIdx = 0;//assign 0° to all keypoints
+                    //keypoints[k].angle = 0.0;
+                }else
+                {
+                    if(keypoints[k].angle < 0.f)
+                        thetaIdx = int(FREAK_NB_ORIENTATION*keypoints[k].angle*(1/360.0)-0.5);
+                    else
+                        thetaIdx = int(FREAK_NB_ORIENTATION*keypoints[k].angle*(1/360.0)+0.5);
+
+                    if( thetaIdx < 0 )
+                        thetaIdx += FREAK_NB_ORIENTATION;
+
+                    if( thetaIdx >= FREAK_NB_ORIENTATION )
+                        thetaIdx -= FREAK_NB_ORIENTATION;
+                }
             }
+
             // get the points intensity value in the rotated pattern
             for( int i = FREAK_NB_POINTS; i--; ) {
                 pointsValue[i] = meanIntensity<srcMatType, iiMatType>(image, imgIntegral,
@@ -813,9 +859,9 @@ void FREAKImpl::drawPattern()
 
 // -------------------------------------------------
 /* FREAK interface implementation */
-FREAK_Impl::FREAK_Impl( bool _orientationNormalized, bool _scaleNormalized
+FREAK_Impl::FREAK_Impl(bool _doOrientation, bool _orientationNormalized, bool _scaleNormalized
             , float _patternScale, int _nOctaves, const std::vector<int>& _selectedPairs )
-    : orientationNormalized(_orientationNormalized), scaleNormalized(_scaleNormalized),
+    : doOrientation(_doOrientation), orientationNormalized(_orientationNormalized), scaleNormalized(_scaleNormalized),
     patternScale(_patternScale), nOctaves(_nOctaves), extAll(false),
     patternScale0(0.0), nOctaves0(0), selectedPairs0(_selectedPairs)
 {
@@ -840,13 +886,13 @@ int FREAK_Impl::defaultNorm() const
     return cv::NORM_HAMMING;
 }
 
-cv::Ptr<FREAK> FREAK::create(bool orientationNormalized,
+cv::Ptr<FREAK> FREAK::create(bool doOrientation, bool orientationNormalized,
                          bool scaleNormalized,
                          float patternScale,
                          int nOctaves,
                          const std::vector<int>& selectedPairs)
 {
-    return cv::makePtr<FREAK_Impl>(orientationNormalized, scaleNormalized,
+    return cv::makePtr<FREAK_Impl>(doOrientation, orientationNormalized, scaleNormalized,
                                patternScale, nOctaves, selectedPairs);
 }
 
