@@ -41,6 +41,8 @@
 #include <iomanip>
 #include <string.h>
 
+#include <stdexcept>
+
 #include <opencv2/imgproc/imgproc.hpp>
 #include "freak.h"
 
