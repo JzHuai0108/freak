@@ -31,20 +31,20 @@
 //  the use of this software, even if advised of the possibility of such damage.
 
 //#include "precomp.hpp"
-#include <fstream>
+#include "freak.h"
+
 #include <stdlib.h>
-#include <algorithm>
-#include <iostream>
-#include <bitset>
-#include <sstream>
-#include <algorithm>
-#include <iomanip>
 #include <string.h>
 
+#include <algorithm>
+#include <bitset>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 #include <opencv2/imgproc/imgproc.hpp>
-#include "freak.h"
 
 namespace freak
 {
